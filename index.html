@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>うっうー</title>
+  <script src="http://code.createjs.com/easeljs-0.7.1.min.js"></script>
+  <script>
+    var canvas,
+        stage,
+        container,
+        mouseTarget,
+        dragStarted,
+        offset;
+    var counter = 0;
+    var update = true;
+
+    window.onload = init;
+
+    function init() {
+      canvas = document.getElementById("canvas");
+      stage = new createjs.Stage(canvas);
+
+      createjs.Touch.enable(stage);
+
+      stage.enableMouseOver(10);
+      stage.mouseMoveOutside = true;
+
+      document.getElementById("imgBtn").addEventListener("click", function() {
+        var input = document.getElementById("url");
+        var img = new Image();
+        img.src = input.value;
+        img.onload = handleImageLoad;
+      });
+
+      var img = new Image();
+      img.src = "https://pbs.twimg.com/media/BttLLmxCQAAE67I.png";
+      img.onload = function() {
+        var bitmap = new createjs.Bitmap(img);
+        stage.addChild(bitmap);
+        stage.update();
+
+        container = new createjs.Container();
+        stage.addChild(container);
+        createjs.Ticker.addEventListener("tick", tick);
+      }
+    }
+
+    function stop() {
+      createjs.Ticker.removeEventListener("tick", tick);
+    }
+
+    function handleImageLoad(event) {
+      var image = event.target;
+      var bitmap;
+
+      bitmap = new createjs.Bitmap(image);
+      container.addChild(bitmap);
+      bitmap.x = 0;
+      bitmap.y = 0;
+      bitmap.name = "bmp_"+counter;
+      bitmap.cursor = "pointer";
+
+      counter++;
+
+      bitmap.on("mousedown", function(evt) {
+        this.parent.addChild(this);
+        this.offset = {x:this.x-evt.stageX, y:this.y-evt.stageY};
+      });
+
+      bitmap.on("pressmove", function(evt) {
+        this.x = evt.stageX+ this.offset.x;
+        this.y = evt.stageY+ this.offset.y;
+        update = true;
+      });
+
+      var hitObject = new createjs.Shape();
+      hitObject .graphics.beginFill("#000000").drawRect(0, 0, bitmap.image.width, bitmap.image.height);
+      bitmap.hitArea = hitObject;
+
+      update = true;
+    }
+
+    function tick(event) {
+      if (update) {
+        update = false;
+        stage.update(event);
+      }
+    }
+  </script>
+</head>
+<body>
+  <div>
+    <input id="url" type="text" size="128">
+    <button id="imgBtn">画像読み込み</button>
+  </div>
+  <div style="text-align: center;">
+    <canvas id="canvas" width="578" height="822"></canvas>
+  </div>
+</body>
+</html>
